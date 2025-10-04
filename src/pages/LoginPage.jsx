@@ -8,17 +8,33 @@ const LoginPage = () => {
     const { username, password } = formData;
     const onChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-    const onSubmit = async e => {
-        e.preventDefault();
-        try {
-            const res = await api.post('/auth/login', { username, password });
-            localStorage.setItem('token', res.data.token);
-            window.location.href = '/dashboard'; // Redirect to dashboard
-        } catch (err) {
-            setError('Username atau Password salah!');
-            console.error(err);
+const onSubmit = async e => {
+    e.preventDefault();
+    setError(''); // Reset error setiap kali submit
+
+    try {
+        const res = await api.post('/auth/login', { username, password });
+        localStorage.setItem('token', res.data.token);
+        // Ganti dengan navigasi yang lebih baik jika menggunakan React Router
+        window.location.href = '/dashboard';
+    } catch (err) {
+        // Periksa apakah error memiliki respons dari server
+        if (err.response) {
+            // Jika statusnya 429 (Too Many Requests)
+            if (err.response.status === 429) {
+                // Ambil pesan dari body respons server
+                setError(err.response.data.msg); 
+            } else {
+                // Untuk error lain (seperti 401), tampilkan pesan generik
+                setError('Username atau Password salah!');
+            }
+        } else {
+            // Jika tidak ada respons (misal: masalah jaringan)
+            setError('Tidak dapat terhubung ke server. Periksa koneksi Anda.');
         }
-    };
+        console.error(err);
+    }
+};
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">

@@ -129,7 +129,7 @@ const DatePicker = ({ label, value, onChange, min, id }) => {
     };
 
     const days = getDaysInMonth(currentMonth);
-    const monthYear = currentMonth.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    
 
     return (
         <div ref={containerRef} className="relative">

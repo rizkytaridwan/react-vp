@@ -90,6 +90,35 @@ const TransactionsPage = () => {
         }
     };
 
+    const handleSummaryExport = async () => {
+        if (!startDate || !endDate) {
+            alert('Harap pilih rentang "Dari Tanggal" dan "Sampai Tanggal" terlebih dahulu.');
+            return;
+        }
+
+        const params = new URLSearchParams({
+            startDate: startDate,
+            endDate: endDate,
+            storeId: selectedStore,
+        });
+        
+        try {
+            const response = await api.get(`/transactions/summary-export?${params.toString()}`, {
+                responseType: 'blob',
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Rekap-Penjualan-${startDate}-to-${endDate}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error("Gagal mengekspor rekap", error);
+            alert("Gagal mengekspor rekap. Mungkin tidak ada data pada rentang tanggal tersebut.");
+        }
+    };
+
     const formatDate = (dateString) => new Date(dateString).toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
     const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
@@ -102,20 +131,18 @@ const TransactionsPage = () => {
             <h1 className="text-3xl font-bold mb-6 text-gray-800">Daftar Transaksi</h1>
 
             <div className="mb-4 p-4 bg-white rounded-lg shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                {/* Search Bar */}
                 <div className="lg:col-span-2">
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Pencarian</label>
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                         <input
-                            type="text" placeholder="Cari invoice atau kasir..."
+                            type="text" placeholder="Cari invoice, kasir, atau metode bayar..."
                             className="w-full p-2 pl-10 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                             value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
                 </div>
 
-                {/* Filter Toko */}
                 <div>
                     <label className="text-sm font-medium text-gray-700 mb-1 block">Toko</label>
                     <SearchableSelect
@@ -124,7 +151,6 @@ const TransactionsPage = () => {
                     />
                 </div>
                 
-                {/* Input Tanggal Mulai */}
                 <div>
                     <DatePicker
                         id="start-date"
@@ -134,7 +160,6 @@ const TransactionsPage = () => {
                     />
                 </div>
                 
-                {/* Input Tanggal Selesai */}
                 <div>
                      <DatePicker
                         id="end-date"
@@ -146,14 +171,20 @@ const TransactionsPage = () => {
                 </div>
             </div>
             
-            <div className="mb-4 flex justify-end">
-                 {/* Tombol Export */}
+            <div className="mb-4 flex justify-end gap-4">
+                <button 
+                    onClick={handleSummaryExport} 
+                    className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                >
+                    <Download className="h-5 w-5 mr-2" />
+                    Export Rekap
+                </button>
                 <button 
                     onClick={handleExport} 
                     className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
                 >
                     <Download className="h-5 w-5 mr-2" />
-                    Export ke Excel
+                    Export Detail
                 </button>
             </div>
 
@@ -172,7 +203,7 @@ const TransactionsPage = () => {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="5" className="text-center py-10">Memuat data...</td></tr>
+                                <tr><td colSpan="6" className="text-center py-10">Memuat data...</td></tr>
                             ) : transactions.length > 0 ? (
                                 transactions.map((tx) => (
                                     <tr key={tx.id} className="border-b border-gray-200 hover:bg-gray-100">
@@ -185,7 +216,7 @@ const TransactionsPage = () => {
                                     </tr>
                                 ))
                             ) : (
-                                <tr><td colSpan="5" className="text-center py-10 text-gray-500">Tidak ada transaksi ditemukan.</td></tr>
+                                <tr><td colSpan="6" className="text-center py-10 text-gray-500">Tidak ada transaksi ditemukan.</td></tr>
                             )}
                         </tbody>
                     </table>
