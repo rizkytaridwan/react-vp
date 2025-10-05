@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
-const StoreEditModal = ({ store, isOpen, onClose, onSave }) => {
-    const [formData, setFormData] = useState({ name: '', address: '', phone: '', status: 'active' });
+const StoreEditModal = ({ store, isOpen, onClose, onSave, regions }) => {
+    const [formData, setFormData] = useState({ name: '', address: '', phone: '', status: 'active', region_id: '' });
     const isEditing = !!store;
 
     useEffect(() => {
@@ -15,10 +15,11 @@ const StoreEditModal = ({ store, isOpen, onClose, onSave }) => {
                 address: store.address || '',
                 phone: store.phone || '',
                 status: store.status || 'active',
+                region_id: store.region_id || '',
             });
         } else {
             // Reset form untuk mode "Tambah Baru"
-            setFormData({ name: '', address: '', phone: '', status: 'active' });
+            setFormData({ name: '', address: '', phone: '', status: 'active', region_id: '' });
         }
     }, [store]);
 
@@ -49,6 +50,15 @@ const StoreEditModal = ({ store, isOpen, onClose, onSave }) => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Nama Toko</label>
                                 <input type="text" name="name" value={formData.name} onChange={handleChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Regional</label>
+                                <select name="region_id" value={formData.region_id} onChange={handleChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                                    <option value="">-- Pilih Regional --</option>
+                                    {regions.map(region => (
+                                        <option key={region.id} value={region.id}>{region.name}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Alamat</label>

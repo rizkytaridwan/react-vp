@@ -24,6 +24,7 @@ const UsersPage = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [roles, setRoles] = useState([]);
     const [stores, setStores] = useState([]);
+    const [regions, setRegions] = useState([]); // Tambahkan state untuk regions
 
     // State untuk search dan paginasi
     const [searchTerm, setSearchTerm] = useState('');
@@ -41,8 +42,8 @@ const UsersPage = () => {
                 search: debouncedSearchTerm,
             });
             const res = await api.get(`/users?${params.toString()}`);
-            setUsers(res.data.users); // Mengambil array 'users' dari respons
-            setTotalPages(res.data.totalPages); // Mengambil total halaman dari respons
+            setUsers(res.data.users);
+            setTotalPages(res.data.totalPages);
         } catch (error) {
             console.error("Gagal mengambil data user", error);
             setUsers([]);
@@ -52,16 +53,18 @@ const UsersPage = () => {
         }
     }, [currentPage, debouncedSearchTerm]);
 
-    // Fetch data awal (roles & stores) hanya sekali saat komponen dimuat
+    // Fetch data awal (roles, stores, & regions) hanya sekali
     useEffect(() => {
         const fetchDropdownData = async () => {
             try {
-                const [rolesRes, storesRes] = await Promise.all([
+                const [rolesRes, storesRes, regionsRes] = await Promise.all([
                     api.get('/users/roles'),
-                    api.get('/users/stores')
+                    api.get('/users/stores'),
+                    api.get('/regions') // Asumsi endpoint baru
                 ]);
                 setRoles(rolesRes.data);
                 setStores(storesRes.data);
+                setRegions(regionsRes.data);
             } catch (error) {
                 console.error("Gagal mengambil data dropdown", error);
             }
@@ -69,7 +72,6 @@ const UsersPage = () => {
         fetchDropdownData();
     }, []);
 
-    // Fetch data user setiap kali filter (halaman atau pencarian) berubah
     useEffect(() => {
         fetchUsers();
     }, [fetchUsers]);
@@ -94,7 +96,8 @@ const UsersPage = () => {
         try {
             const payload = {
                 ...updatedData,
-                store_id: updatedData.store_id || null
+                store_id: updatedData.store_id || null,
+                region_id: updatedData.region_id || null, // sertakan region_id
             };
             await api.put(`/users/${selectedUser.id}`, payload);
             alert(`User ${selectedUser.full_name} berhasil diupdate!`);
@@ -140,13 +143,14 @@ const UsersPage = () => {
                                 <th className="px-5 py-3 border-b-2 border-gray-200 text-left">Username</th>
                                 <th className="px-5 py-3 border-b-2 border-gray-200 text-left">Role</th>
                                 <th className="px-5 py-3 border-b-2 border-gray-200 text-left">Toko</th>
+                                <th className="px-5 py-3 border-b-2 border-gray-200 text-left">Regional</th>
                                 <th className="px-5 py-3 border-b-2 border-gray-200 text-center">Status</th>
                                 <th className="px-5 py-3 border-b-2 border-gray-200 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="6" className="text-center py-10">Memuat data user...</td></tr>
+                                <tr><td colSpan="7" className="text-center py-10">Memuat data user...</td></tr>
                             ) : users.length > 0 ? (
                                 users.map((user) => (
                                     <tr key={user.id} className="border-b border-gray-200 hover:bg-gray-100">
@@ -154,6 +158,7 @@ const UsersPage = () => {
                                         <td className="px-5 py-4 text-sm"><p className="text-gray-600 whitespace-no-wrap">@{user.telegram_username}</p></td>
                                         <td className="px-5 py-4 text-sm"><p className="text-gray-900 whitespace-no-wrap">{user.role_name || 'Pending'}</p></td>
                                         <td className="px-5 py-4 text-sm"><p className="text-gray-600 whitespace-no-wrap">{user.store_name || 'N/A'}</p></td>
+                                        <td className="px-5 py-4 text-sm"><p className="text-gray-600 whitespace-no-wrap">{user.region_name || 'N/A'}</p></td>
                                         <td className="px-5 py-4 text-sm text-center">
                                             <span className={`px-3 py-1 font-semibold leading-tight rounded-full ${getStatusBadge(user.status)}`}>
                                                 {user.status}
@@ -167,7 +172,7 @@ const UsersPage = () => {
                                     </tr>
                                 ))
                             ) : (
-                                <tr><td colSpan="6" className="text-center py-10 text-gray-500">Tidak ada user ditemukan.</td></tr>
+                                <tr><td colSpan="7" className="text-center py-10 text-gray-500">Tidak ada user ditemukan.</td></tr>
                             )}
                         </tbody>
                     </table>
@@ -203,6 +208,7 @@ const UsersPage = () => {
                 user={selectedUser}
                 roles={roles}
                 stores={stores}
+                regions={regions} // Kirimkan regions ke modal
             />
         </div>
     );

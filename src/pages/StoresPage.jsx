@@ -21,6 +21,7 @@ function useDebounce(value, delay) {
 
 const StoresPage = () => {
     const [stores, setStores] = useState([]);
+    const [regions, setRegions] = useState([]); // State untuk menyimpan daftar regional
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedStore, setSelectedStore] = useState(null);
@@ -32,7 +33,6 @@ const StoresPage = () => {
 
     const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-    // Fungsi fetchStores sekarang mendukung paginasi dan pencarian server-side
     const fetchStores = useCallback(async () => {
         setLoading(true);
         try {
@@ -41,8 +41,8 @@ const StoresPage = () => {
                 search: debouncedSearchTerm,
             });
             const res = await api.get(`/stores?${params.toString()}`);
-            setStores(res.data.stores); // Mengambil array 'stores' dari respons
-            setTotalPages(res.data.totalPages); // Mengambil total halaman dari respons
+            setStores(res.data.stores);
+            setTotalPages(res.data.totalPages);
         } catch (error) {
             console.error("Gagal mengambil data toko", error);
             setStores([]);
@@ -50,11 +50,31 @@ const StoresPage = () => {
         } finally {
             setLoading(false);
         }
-    }, [currentPage, debouncedSearchTerm]); // Dependensi yang benar
+    }, [currentPage, debouncedSearchTerm]);
 
+    // Fetch data awal (stores & regions)
     useEffect(() => {
-        fetchStores();
-    }, [fetchStores]);
+        const fetchInitialData = async () => {
+            setLoading(true);
+            try {
+                // Di sini perubahannya:
+                const [storesRes, regionsRes] = await Promise.all([
+                    api.get(`/stores?page=${currentPage}&search=${debouncedSearchTerm}`),
+                    api.get('/users/regions') // UBAH INI dari '/regions' menjadi '/users/regions'
+                ]);
+                setStores(storesRes.data.stores);
+                setTotalPages(storesRes.data.totalPages);
+                setRegions(regionsRes.data);
+            } catch (error) {
+                console.error("Gagal mengambil data awal", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchInitialData();
+    }, [currentPage, debouncedSearchTerm]);
+
 
     // Efek untuk mereset ke halaman 1 saat filter pencarian berubah
     useEffect(() => {
@@ -133,6 +153,7 @@ const StoresPage = () => {
                          <thead>
                             <tr className="bg-gray-200 text-gray-600 uppercase text-sm">
                                 <th className="px-5 py-3 border-b-2 border-gray-200 text-left">Nama Toko</th>
+                                <th className="px-5 py-3 border-b-2 border-gray-200 text-left">Regional</th>
                                 <th className="px-5 py-3 border-b-2 border-gray-200 text-left">Alamat</th>
                                 <th className="px-5 py-3 border-b-2 border-gray-200 text-left">Telepon</th>
                                 <th className="px-5 py-3 border-b-2 border-gray-200 text-center">Status</th>
@@ -141,12 +162,13 @@ const StoresPage = () => {
                          </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="5" className="text-center py-10">Memuat data toko...</td></tr>
+                                <tr><td colSpan="6" className="text-center py-10">Memuat data toko...</td></tr>
                             ) : 
                             stores.length > 0 ? (
                                 stores.map((store) => (
                                     <tr key={store.id} className="border-b border-gray-200 hover:bg-gray-100">
                                         <td className="px-5 py-4 text-sm"><p className="text-gray-900 whitespace-no-wrap font-semibold">{store.name}</p></td>
+                                        <td className="px-5 py-4 text-sm"><p className="text-gray-700 whitespace-no-wrap">{store.region_name || 'N/A'}</p></td>
                                         <td className="px-5 py-4 text-sm"><p className="text-gray-600 whitespace-no-wrap">{store.address || '-'}</p></td>
                                         <td className="px-5 py-4 text-sm"><p className="text-gray-600 whitespace-no-wrap">{store.phone || '-'}</p></td>
                                         <td className="px-5 py-4 text-sm text-center">
@@ -161,7 +183,7 @@ const StoresPage = () => {
                                     </tr>
                                 ))
                             ) : (
-                                <tr><td colSpan="5" className="text-center py-10 text-gray-500">Tidak ada toko ditemukan.</td></tr>
+                                <tr><td colSpan="6" className="text-center py-10 text-gray-500">Tidak ada toko ditemukan.</td></tr>
                             )}
                         </tbody>
                     </table>
@@ -194,6 +216,7 @@ const StoresPage = () => {
                 onClose={handleCloseModal}
                 onSave={handleSaveStore}
                 store={selectedStore}
+                regions={regions} 
             />
         </div>
     );

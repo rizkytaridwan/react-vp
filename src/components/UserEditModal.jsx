@@ -4,18 +4,18 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 
-const UserEditModal = ({ user, roles, stores, isOpen, onClose, onSave }) => {
-    const [formData, setFormData] = useState({ role_id: '', store_id: '', status: '' });
+const UserEditModal = ({ user, roles, stores, regions, isOpen, onClose, onSave }) => {
+    const [formData, setFormData] = useState({ role_id: '', store_id: '', status: '', region_id: '' });
 
-    // Setiap kali user yang dipilih berubah, update state form di dalam modal
+    const selectedRoleName = roles.find(r => r.id === parseInt(formData.role_id, 10))?.name;
+
     useEffect(() => {
         if (user) {
             setFormData({
-                // Cari ID role berdasarkan nama role user, atau set default jika tidak ada
                 role_id: roles.find(r => r.name === user.role_name)?.id || '',
-                // Cari ID toko berdasarkan nama toko user, atau set null jika tidak ada
                 store_id: stores.find(s => s.name === user.store_name)?.id || null,
                 status: user.status || 'pending',
+                region_id: user.region_id || '',
             });
         }
     }, [user, roles, stores]);
@@ -23,11 +23,22 @@ const UserEditModal = ({ user, roles, stores, isOpen, onClose, onSave }) => {
     if (!isOpen || !user) return null;
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData(prev => {
+            const newState = { ...prev, [name]: value };
+            // Reset store_id jika role adalah 'Kepala Cabang'
+            if (name === 'role_id' && roles.find(r => r.id === parseInt(value, 10))?.name === 'Kepala Cabang') {
+                newState.store_id = '';
+            }
+            // Reset region_id jika role BUKAN 'Kepala Cabang'
+            if (name === 'role_id' && roles.find(r => r.id === parseInt(value, 10))?.name !== 'Kepala Cabang') {
+                newState.region_id = '';
+            }
+            return newState;
+        });
     };
 
     const handleSave = () => {
-        // Kirim data yang sudah diupdate ke parent component
         onSave(formData);
     };
 
@@ -35,7 +46,6 @@ const UserEditModal = ({ user, roles, stores, isOpen, onClose, onSave }) => {
         <AnimatePresence>
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center">
-                    {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -43,7 +53,6 @@ const UserEditModal = ({ user, roles, stores, isOpen, onClose, onSave }) => {
                         className="absolute inset-0 bg-black bg-opacity-50"
                         onClick={onClose}
                     />
-                    {/* Modal Content */}
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
@@ -62,7 +71,6 @@ const UserEditModal = ({ user, roles, stores, isOpen, onClose, onSave }) => {
                         </div>
                         
                         <div className="space-y-4">
-                            {/* Role Dropdown */}
                             <div>
                                 <label htmlFor="role_id" className="block text-sm font-medium text-gray-700">Role</label>
                                 <select name="role_id" value={formData.role_id || ''} onChange={handleChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md">
@@ -70,15 +78,29 @@ const UserEditModal = ({ user, roles, stores, isOpen, onClose, onSave }) => {
                                     {roles.map(role => <option key={role.id} value={role.id}>{role.name}</option>)}
                                 </select>
                             </div>
-                            {/* Store Dropdown */}
-                            <div>
-                                <label htmlFor="store_id" className="block text-sm font-medium text-gray-700">Toko</label>
-                                <select name="store_id" value={formData.store_id || ''} onChange={handleChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md">
-                                    <option value="">-- Pilih Toko (Kosongkan untuk Super Admin) --</option>
-                                    {stores.map(store => <option key={store.id} value={store.id}>{store.name}</option>)}
-                                </select>
-                            </div>
-                            {/* Status Dropdown */}
+                            
+                            {/* Tampilkan dropdown Toko jika role BUKAN Kepala Cabang */}
+                            {selectedRoleName !== 'Kepala Cabang' && (
+                                <div>
+                                    <label htmlFor="store_id" className="block text-sm font-medium text-gray-700">Toko</label>
+                                    <select name="store_id" value={formData.store_id || ''} onChange={handleChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                                        <option value="">-- Pilih Toko (Kosongkan jika tidak relevan) --</option>
+                                        {stores.map(store => <option key={store.id} value={store.id}>{store.name}</option>)}
+                                    </select>
+                                </div>
+                            )}
+
+                            {/* Tampilkan dropdown Regional jika role adalah Kepala Cabang */}
+                            {selectedRoleName === 'Kepala Cabang' && (
+                                <div>
+                                    <label htmlFor="region_id" className="block text-sm font-medium text-gray-700">Regional</label>
+                                    <select name="region_id" value={formData.region_id || ''} onChange={handleChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                                        <option value="">-- Pilih Regional --</option>
+                                        {regions.map(region => <option key={region.id} value={region.id}>{region.name}</option>)}
+                                    </select>
+                                </div>
+                            )}
+
                              <div>
                                 <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
                                 <select name="status" value={formData.status} onChange={handleChange} className="mt-1 block w-full p-2 border border-gray-300 rounded-md">
