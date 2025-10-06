@@ -1,7 +1,4 @@
 // src/components/DashboardSkeleton.jsx
-
-import React from 'react';
-
 const SkeletonCard = () => (
     <div className="bg-white p-6 rounded-lg shadow-md animate-pulse">
         <div className="flex items-center">
