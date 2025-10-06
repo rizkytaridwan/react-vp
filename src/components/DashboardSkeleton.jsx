@@ -32,7 +32,7 @@ const DashboardSkeleton = () => {
                                     <div className="h-3 bg-gray-200 rounded w-20"></div>
                                 </div>
                                 <div className="h-5 bg-gray-200 rounded w-24"></div>
-                            </div> // <-- Diperbaiki di sini dari </li> menjadi </div>
+                            </div> 
                         ))}
                      </div>
                 </div>

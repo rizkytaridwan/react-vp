@@ -231,7 +231,7 @@ const UsersPage = () => {
                                     <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-white">Nama Lengkap</th>
                                     <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-white">Username</th>
                                     <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-white">Role</th>
-                                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-white">Toko</th>
+                                    <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-white">Toko Utama</th>
                                     <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-white">Regional</th>
                                     <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider text-white">Status</th>
                                     <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider text-white">Aksi</th>
