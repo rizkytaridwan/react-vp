@@ -1,7 +1,6 @@
 // src/components/SearchableSelect.jsx
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import Select from 'react-select';
-import { MapPin, Store } from 'lucide-react';
 
 const SearchableSelect = ({ options, value, onChange, placeholder = "Pilih...", label }) => {
     const [inputValue, setInputValue] = useState('');

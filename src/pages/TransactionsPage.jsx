@@ -85,15 +85,29 @@ const TransactionsPage = () => {
         setCurrentPage(1);
     }, [debouncedSearchTerm, filter.selectedStore, filter.selectedRegion, filter.startDate, filter.endDate]);
 
-    const handleFilterChange = (key, value) => {
-        setFilter(prev => {
-            const newFilter = { ...prev, [key]: value };
-            if (key === 'selectedRegion') {
-                newFilter.selectedStore = 'all';
+   const handleFilterChange = (key, value) => {
+    setFilter(prev => {
+        const newFilter = { ...prev, [key]: value };
+
+        // --- TAMBAHAN LOGIKA ---
+        // Jika user mengubah tanggal mulai (startDate)
+        if (key === 'startDate') {
+            // Dan jika tanggal akhir (endDate) sudah ada,
+            // dan tanggal mulai yang baru LEBIH BESAR dari tanggal akhir yang sudah ada,
+            // maka kita reset tanggal akhirnya.
+            if (prev.endDate && value && new Date(value) > new Date(prev.endDate)) {
+                newFilter.endDate = ''; // Reset endDate
             }
-            return newFilter;
-        });
-    };
+        }
+        // --- AKHIR TAMBAHAN ---
+
+        if (key === 'selectedRegion') {
+            newFilter.selectedStore = 'all';
+        }
+        
+        return newFilter;
+    });
+};
 
     const clearFilters = () => {
         setFilter({
@@ -407,7 +421,7 @@ const TransactionsPage = () => {
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.3 }}
-                            className="mb-6 overflow-hidden"
+                            className="mb-6"
                         >
                             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                                 <div className="flex items-center justify-between mb-5">
